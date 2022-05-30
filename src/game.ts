@@ -45,7 +45,7 @@ class Stage extends Entity implements ISystem {
     public cur_checkpoint_index = 0;
     
     public grapple_max_length = 6;
-    public grapple_min_length = 1;
+    public grapple_min_length = 0.3;
     public sounds = {};
     public lives = 5;
     public time  = 0;
@@ -54,12 +54,15 @@ class Stage extends Entity implements ISystem {
     public ui_msg;
     public ui_lives; 
     public ui_time;
+    public ui_mode;
     public game_completed = 0;
 
     public lblhighscore = [];
     public salt = "gamejam2022";
     public common_box;
     public common_sphere;
+    public common_billboard = new Billboard();
+
 
 
     public colyseus_room = null;
@@ -72,8 +75,8 @@ class Stage extends Entity implements ISystem {
     public ID_GRAPPLE = 6200;
     public ID_PENDULUM_BALL = 7000;
 
-    public instruction_A = "Instructions: \nUse W,A,S,D to steer the ball. Space to jump, Num1 to Restart, Num2 to Join Multiplayer."
-    public instruction_B = "To use the Grapple Hook, left click to launch the hook. \nHold the left mouse to hold on to the rope. Release the left mouse to release the hook.";
+    public instruction_A = "Instructions: \nUse W,A,S,D to steer the ball. Space to jump, Num1 to Restart, Num2 to Join/Leave Multiplayer Server."
+    public instruction_B = "To use the Grapple Hook, left click to launch the hook. Hold the left mouse to hold on to the rope. Release the left mouse to release the hook.\nThe hook is always launched upward direction. You can use W,A,S,D + left click to influence the direction when the hook is launched";
 
 
     //-------------
@@ -83,7 +86,6 @@ class Stage extends Entity implements ISystem {
 
         this.init_materials();
         this.init_entities();
-        this.init_cannon_eventhdls();
         this.init_inputs();    
         this.init_modarea();
         this.init_sounds();
@@ -272,8 +274,8 @@ class Stage extends Entity implements ISystem {
         ui_msg.vTextAlign = "top";
 		ui_msg.positionX =  0;
 		ui_msg.positionY = 0;
-        ui_msg.value = this.instruction_A;
-        ui_msg.fontSize = 15;
+        ui_msg.value = this.instruction_A ;
+        ui_msg.fontSize = 10;
 		ui_msg.visible = true;
         this.ui_msg = ui_msg;
 
@@ -300,6 +302,19 @@ class Stage extends Entity implements ISystem {
         ui_time.fontSize = 15;
 		ui_time.visible = true;
         this.ui_time = ui_time;
+
+
+        let ui_mode = new UIText( ui_root );
+        ui_mode.vAlign = "top";
+		ui_mode.hAlign = "left";
+		ui_mode.hTextAlign = "left";
+        ui_mode.vTextAlign = "top";
+		ui_mode.positionX =  200;
+		ui_mode.positionY = 60;
+        ui_mode.value = "Mode: Single Player" ;
+        ui_mode.fontSize = 15;
+		ui_mode.visible = true;
+        this.ui_mode = ui_mode;
 
 		
     }
@@ -521,7 +536,11 @@ class Stage extends Entity implements ISystem {
 
 
     //-------
-    init_entities() {
+    async init_entities() {
+
+        if ( !this.userData) {
+            await this.setUserData()
+        }	
 
         let world = new CANNON.World()
         world.quatNormalizeSkip = 0
@@ -753,7 +772,7 @@ class Stage extends Entity implements ISystem {
         let py = this.checkpoints[ this.cur_checkpoint_index ].y;
         let pz = this.checkpoints[ this.cur_checkpoint_index ].z;
 
-        this.createPlayer( "self", px, py, pz );
+        this.createPlayer( "self", px, py, pz , this.userData.displayName );
         
 
 
@@ -944,7 +963,9 @@ class Stage extends Entity implements ISystem {
 
         //-------
         // CameraBox
-        z -= 3;
+        x = 8;
+        y = 4.5;
+        z = 8;
         sx = sy = sz = 1;
         let camerabox = new Entity();
         camerabox.setParent(this);
@@ -966,6 +987,7 @@ class Stage extends Entity implements ISystem {
 
         //--------------
         this.createUI()
+        this.init_cannon_eventhdls();
         
     }
 
@@ -1019,7 +1041,7 @@ class Stage extends Entity implements ISystem {
 
 
     //-------
-    createPlayer(  sessionId , x ,y, z ) {
+    createPlayer(  sessionId , x ,y, z , username ) {
         
         
         let sx = 0.2;
@@ -1084,7 +1106,18 @@ class Stage extends Entity implements ISystem {
         })
         this.world.addBody( mainobj["grapple_cannonbody_static"] );
 
-        
+        let nametag = new Entity();
+        nametag.setParent( this );
+        nametag.addComponent( new Transform({
+            position: new Vector3(x,y + 0.02, z),
+            scale: new Vector3(0.08,0.08,0.08)
+        }))
+        nametag.addComponent( new TextShape(username));
+        nametag.addComponent( this.common_billboard );
+        mainobj["nametag"] = nametag;
+
+
+
         return mainobj;
 
     }
@@ -1312,8 +1345,6 @@ class Stage extends Entity implements ISystem {
             
             if ( this.colyseus_room == null ) {
                 
-                ui.displayAnnouncement("Joining Multiplayer Server.... \nServer Connected. \n\n Note: You may experience slight latency compared to Single Player Mode.", 10, Color4.Yellow(), 14, false);
-                
                 this.init_colyseus();
             } else {
                 
@@ -1471,7 +1502,7 @@ class Stage extends Entity implements ISystem {
     colyseus_fire_grapple() {
         
         let throw_power = 1;
-        let use_vector = Vector3.Forward();
+        let use_vector = new Vector3(0,0,0);
         if ( this.button_states[ActionButton.LEFT] == 1) {
             use_vector = Vector3.Left();
         } else if ( this.button_states[ActionButton.RIGHT] == 1) {
@@ -1489,10 +1520,11 @@ class Stage extends Entity implements ISystem {
     //---------
     fire_grapple() {
         
-
+        this.release_grapple();
         let throw_power = 1;
         
-        let use_vector = Vector3.Forward();
+        let use_vector = new Vector3(0,0,0);
+
         if ( this.button_states[ActionButton.LEFT] == 1) {
             use_vector = Vector3.Left();
         } else if ( this.button_states[ActionButton.RIGHT] == 1) {
@@ -1639,7 +1671,9 @@ class Stage extends Entity implements ISystem {
         engine.removeEntity(  this.player_objects[ sessionId ]["grapple"] );
         engine.removeEntity(  this.player_objects[ sessionId ]["grapple_line"] );
         engine.removeEntity(  this.player_objects[ sessionId ]["grapple_head"] );
+        engine.removeEntity(  this.player_objects[ sessionId ]["nametag"] );
         engine.removeEntity(  this.player_objects[ sessionId ] );
+
         
         // Finally delete the map
         delete this.player_objects[ sessionId ];
@@ -1676,7 +1710,12 @@ class Stage extends Entity implements ISystem {
                 
             
             _this.colyseus_room = room;
+            _this.time = 0;
+            ui.displayAnnouncement("Joining Multiplayer Server.... \nServer Connected. \n\n Note: You may experience slight latency as physics simulation is done on server in multiplayers mode.", 10, Color4.Yellow(), 14, false);
             
+            _this.ui_mode.value = "Mode: Multiplayers. "
+            _this.ui_mode.color = Color3.Green();
+
             
             //----------------------
             room.onLeave(code => {
@@ -1689,6 +1728,8 @@ class Stage extends Entity implements ISystem {
                 ui.displayAnnouncement("Server disconnected. Back to single player mode.", 10, Color4.Blue(), 14 , false );
                 _this.clear_other_players();
                 _this.colyseus_room = null;
+                _this.ui_mode.value = "Mode: Single Player "
+                _this.ui_mode.color = Color3.White();
 
             });
 
@@ -1708,8 +1749,8 @@ class Stage extends Entity implements ISystem {
                 
                 if ( player.sessionId != room.sessionId ) {
                     // Other players
-                    let mainplayer = _this.createPlayer( player.sessionId, player.x, player.y, player.z );
-                    ui.displayAnnouncement("[SERVER] Player " + player.username  + " has joined the game.", 5, Color4.Blue(), 14, false);
+                    let mainplayer = _this.createPlayer( player.sessionId, player.x, player.y, player.z , player.displayName );
+                    ui.displayAnnouncement("[SERVER] Player " + player.displayName  + " has joined the game.", 5, Color4.Blue(), 14, false);
                 }   
 
                 player.onChange = function (changes) {
@@ -1809,7 +1850,7 @@ class Stage extends Entity implements ISystem {
             //----------------------
             room.state.players.onRemove = function (player, sessionId) {
 
-                ui.displayAnnouncement("[SERVER] Player " + player.username  + " has left the game.", 5, Color4.Blue(), 14, false);
+                ui.displayAnnouncement("[SERVER] Player " + player.displayName  + " has left the game.", 5, Color4.Blue(), 14, false);
                 log("room.state.players.onRemove", player.sessionId );
                 _this.remove_player_by_sessionId( player.sessionId );
 
@@ -1836,6 +1877,7 @@ class Stage extends Entity implements ISystem {
                 _this.sounds["gameover"].playOnce();
                 _this.reset_cannonbody( _this.player_objects["self"].cannonbody );
                 _this.lives = 5;
+                _this.time = 0;
                 _this.reduce_life( 0 );
 
             });
@@ -1865,6 +1907,9 @@ class Stage extends Entity implements ISystem {
 
                 
         }).catch(e => {
+            
+            ui.displayAnnouncement("Unable to connect to Colyseus Server. ", 10, Color4.Red(), 14, false);
+            
             log("CONNECT ERROR", e);
         });
     }
@@ -2012,11 +2057,7 @@ class Stage extends Entity implements ISystem {
         }
         
         
-        // Update time
-        if ( this.game_completed == 0 ) {
-            this.time += 1;
-            this.ui_time.value = "Time: " + this.format_time( this.time );
-        }
+        
     }
 
 
@@ -2096,6 +2137,12 @@ class Stage extends Entity implements ISystem {
             this.player_objects[sessionId].getComponent(Transform).position.y = this.player_objects[sessionId]["cannonbody"].position.y;
             this.player_objects[sessionId].getComponent(Transform).position.z = this.player_objects[sessionId]["cannonbody"].position.z;
             this.player_objects[sessionId].getComponent(Transform).rotation.copyFrom( this.player_objects[sessionId]["cannonbody"].quaternion);
+
+            this.player_objects[sessionId]["nametag"].getComponent(Transform).position.x = this.player_objects[sessionId].getComponent(Transform).position.x;
+            this.player_objects[sessionId]["nametag"].getComponent(Transform).position.y = this.player_objects[sessionId].getComponent(Transform).position.y + 0.2;
+            this.player_objects[sessionId]["nametag"].getComponent(Transform).position.z = this.player_objects[sessionId].getComponent(Transform).position.z ;
+            
+
         }
         
         // Update objects position to match cannonbodies
@@ -2114,6 +2161,19 @@ class Stage extends Entity implements ISystem {
             this.cannon_pickables[i].getComponent(Transform).position.y = this.cannon_pickables[i]["cannonbody"].position.y;
             this.cannon_pickables[i].getComponent(Transform).position.z = this.cannon_pickables[i]["cannonbody"].position.z;
         }
+
+
+
+        // Update time
+        if ( this.game_completed == 0 ) {
+            this.time += 1;
+            this.ui_time.value = "Time: " + this.format_time( this.time );
+        }
+
+
+
+
+
         
         // Trap the player inside camera fixture collider.
         let xdiff = this.camerabox.getComponent(Transform).position.x - (Camera.instance.feetPosition.x - this.getComponent(Transform).position.x );
@@ -2123,11 +2183,29 @@ class Stage extends Entity implements ISystem {
         if ( xdiff * xdiff + ydiff * ydiff + zdiff * zdiff > 0.5 * 0.5 * 0.5) {
 
             log("Player trapped.");
-            movePlayerTo({
-                x: this.camerabox.getComponent(Transform).position.x + this.getComponent(Transform).position.x, 
-                y: this.camerabox.getComponent(Transform).position.y + 0.2  + this.getComponent(Transform).position.y , 
-                z: this.camerabox.getComponent(Transform).position.z + this.getComponent(Transform).position.z
 
+            let to_x = this.camerabox.getComponent(Transform).position.x        + this.getComponent(Transform).position.x; 
+            let to_y = this.camerabox.getComponent(Transform).position.y + 0.2  + this.getComponent(Transform).position.y;
+            let to_z = this.camerabox.getComponent(Transform).position.z        + this.getComponent(Transform).position.z;
+
+            if ( to_x <= 0 || to_x >= 64 ) {
+                // Readjust if necessary.
+                log("Readjusted")
+                this.camerabox.getComponent(Transform).position.x = 8;
+                to_x = this.camerabox.getComponent(Transform).position.x        + this.getComponent(Transform).position.x; 
+            }
+            if ( to_z <= 0 || to_z >= 64 ) {
+                // Readjust if necessary.
+                log("Readjusted")
+                this.camerabox.getComponent(Transform).position.z = 8;
+                to_z = this.camerabox.getComponent(Transform).position.z        + this.getComponent(Transform).position.z;
+            }
+            
+
+            movePlayerTo({
+                x: to_x, 
+                y: to_y, 
+                z: to_z
             });
 
         } else {
