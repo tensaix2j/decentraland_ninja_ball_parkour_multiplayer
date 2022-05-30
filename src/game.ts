@@ -1689,8 +1689,8 @@ class Stage extends Entity implements ISystem {
         let host        = "tensaistudio.xyz:444";
         
         // comment this out when deploy.
-        protocol    = "ws";
-        host        = "localhost:2567"
+        //protocol    = "ws";
+        //host        = "localhost:2567"
 
 
         var client  = new Client( protocol + "://" + host );
