@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "outFile": "./bin/game.js",
+    "allowJs": true,
+    "strict": false,
+    "noLib": false,
+    "paths": {
+      "@dcl/ui-scene-utils": [
+        "node_modules\\@dcl\\ui-scene-utils\\dist\\index.d.ts",
+        "../common_node_modules/node_modules/@dcl/ui-scene-utils/dist/index.d.ts"
+      ],
+      "colyseus.js": [
+        "../common_node_modules/node_modules/colyseus.js/dist/colyseus.d.ts"
+      ],
+      "@dcl/ecs-scene-utils": [
+        "../common_node_modules/node_modules/@dcl/ecs-scene-utils/dist/index.d.ts"
+      ],
+      "@dcl/l2-scene-utils": [
+        "../common_node_modules/node_modules/@dcl/l2-scene-utils/dist/index.d.ts"
+      ],
+      "eth-connect": [
+        "../common_node_modules/node_modules/eth-connect/eth-connect.d.ts"
+      ]
+    },
+    "baseUrl": "."
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "files": [
+    "node_modules/cannon/build/cannon.min.js"
+  ],
+  "extends": "./node_modules/decentraland-ecs/types/tsconfig.json",
+  "compileOnSave": false
+}
