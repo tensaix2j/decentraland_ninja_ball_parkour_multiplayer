@@ -28,7 +28,7 @@ Ninja Ball Parkour is a game in Decentraland where players parkour as a ball in 
 
 6. Multiplayer using Colyseus.js. You can race with your friends for even more fun experience. (However, do note that in multiplayers mode, the physics simulation is done on the server side, so there will be some latency for all the movements and animations.)
 
-
+7. Highscore board. You can get your name on the hall of fame if you manage to reach the goal.
 
 
 
