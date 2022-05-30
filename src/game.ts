@@ -2100,7 +2100,10 @@ class Stage extends Entity implements ISystem {
                 let vec = this.player_objects[sessionId].getComponent(Transform).position.subtract(   this.player_objects[sessionId]["grapple"].getComponent( Transform ).position );
                 let quaternion = Quaternion.LookRotation( vec );
                 this.player_objects[sessionId]["grapple"].getComponent( Transform ).rotation = quaternion;
-                let magnitude = Math.sqrt( vec.x * vec.x + vec.y * vec.y + vec.z * vec.z );
+                
+                let magnitude = Vector3.Distance(  this.player_objects[sessionId]["grapple"].getComponent( Transform ).position , this.player_objects[sessionId].getComponent(Transform).position )
+            
+
                 this.player_objects[sessionId]["grapple_line"].getComponent( Transform ).scale.z        = magnitude;
                 this.player_objects[sessionId]["grapple_line"].getComponent( Transform ).position.z     = magnitude / 2;                
 
