@@ -7,8 +7,11 @@
 
 import { movePlayerTo } from "@decentraland/RestrictedActions";
 import * as ui from '@dcl/ui-scene-utils';
+
 import { DistanceConstraint } from "cannon";
 import { getUserData, UserData } from '@decentraland/Identity'
+import { getCurrentRealm } from "@decentraland/EnvironmentAPI"
+
 import { Utils } from "src/utils"
 import { Client, Room } from "colyseus.js";
 
@@ -237,7 +240,7 @@ class Stage extends Entity implements ISystem {
 
         dyObj["cannonbody"] = cannonbody;
         
-        this.world.addBody( cannonbody) // Add ball body to the world
+        this.world.addBody( cannonbody) 
 
         if ( cannonbody_id != this.ID_PLAYER ) {
             this.cannon_dynamics.push( dyObj );
@@ -1268,6 +1271,8 @@ class Stage extends Entity implements ISystem {
         // LEFT
         input.subscribe("BUTTON_DOWN", ActionButton.LEFT, false, (e) => {
             this.button_states[ActionButton.LEFT] = 1;
+            this.button_states[ActionButton.RIGHT] = 0;  // unset opposite direction's down incase button up doesn't register.
+            
         });
         input.subscribe("BUTTON_UP", ActionButton.LEFT, false, (e) => {
             this.button_states[ActionButton.LEFT] = 0;
@@ -1276,6 +1281,7 @@ class Stage extends Entity implements ISystem {
         // RIGHT
         input.subscribe("BUTTON_DOWN", ActionButton.RIGHT, false, (e) => {
             this.button_states[ActionButton.RIGHT] = 1;
+            this.button_states[ActionButton.LEFT] = 0;  // unset opposite direction's down incase button up doesn't register.
         });
         input.subscribe("BUTTON_UP", ActionButton.RIGHT, false, (e) => {
             this.button_states[ActionButton.RIGHT] = 0;
@@ -1284,6 +1290,7 @@ class Stage extends Entity implements ISystem {
         // UP
         input.subscribe("BUTTON_DOWN", ActionButton.FORWARD, false, (e) => {
             this.button_states[ActionButton.FORWARD] = 1;
+            this.button_states[ActionButton.BACKWARD] = 0;  // unset opposite direction's down incase button up doesn't register.
         });
         input.subscribe("BUTTON_UP", ActionButton.FORWARD, false, (e) => {
             this.button_states[ActionButton.FORWARD] = 0;
@@ -1292,6 +1299,7 @@ class Stage extends Entity implements ISystem {
         // DOWN
         input.subscribe("BUTTON_DOWN", ActionButton.BACKWARD, false, (e) => {
             this.button_states[ActionButton.BACKWARD] = 1;
+            this.button_states[ActionButton.FORWARD] = 0;  // unset opposite direction's down incase button up doesn't register.
         });
         input.subscribe("BUTTON_UP", ActionButton.BACKWARD, false, (e) => {
             this.button_states[ActionButton.BACKWARD] = 0;
@@ -1688,11 +1696,12 @@ class Stage extends Entity implements ISystem {
         let protocol    = "wss";
         let host        = "tensaistudio.xyz:444";
         
-        // comment this out when deploy.
-        //protocol    = "ws";
-        //host        = "localhost:2567"
-
-
+        const playerRealm = await getCurrentRealm()
+        if ( playerRealm.serverName == "localhost" ) {
+            protocol    = "ws";
+            host        = "localhost:2567"
+        }
+        
         var client  = new Client( protocol + "://" + host );
         
 
@@ -1901,7 +1910,7 @@ class Stage extends Entity implements ISystem {
             //---------
             room.onMessage("checkpoint", ( ) => {
                 ui.displayAnnouncement("[SERVER] Checkpoint Reached.", 10, Color4.Blue(), 14, false);
-            
+                _this.ui_msg.value = _this.instruction_A + "\n" + _this.instruction_B;
             });
 
 
@@ -2191,20 +2200,20 @@ class Stage extends Entity implements ISystem {
             let to_y = this.camerabox.getComponent(Transform).position.y + 0.2  + this.getComponent(Transform).position.y;
             let to_z = this.camerabox.getComponent(Transform).position.z        + this.getComponent(Transform).position.z;
 
+            // Prevent the camerabox from going into restricted coordinates where movePlayerTo cannot work.
             if ( to_x <= 0 || to_x >= 64 ) {
-                // Readjust if necessary.
-                log("Readjusted")
                 this.camerabox.getComponent(Transform).position.x = 8;
                 to_x = this.camerabox.getComponent(Transform).position.x        + this.getComponent(Transform).position.x; 
             }
+            if ( to_y <= 0  ) {
+                this.camerabox.getComponent(Transform).position.y = 4.5;
+                to_y = this.camerabox.getComponent(Transform).position.y        + this.getComponent(Transform).position.y; 
+            }
             if ( to_z <= 0 || to_z >= 64 ) {
-                // Readjust if necessary.
-                log("Readjusted")
                 this.camerabox.getComponent(Transform).position.z = 8;
                 to_z = this.camerabox.getComponent(Transform).position.z        + this.getComponent(Transform).position.z;
             }
-            
-
+            // Move player into the camerabox.
             movePlayerTo({
                 x: to_x, 
                 y: to_y, 
@@ -2213,6 +2222,7 @@ class Stage extends Entity implements ISystem {
 
         } else {
             
+            // Move the camerabox according to ball position
             if ( this.player_objects["self"]["cannonbody"].position.y > 0  ) {
     
                 let bw = Vector3.Backward().rotate(Camera.instance.rotation)
@@ -2233,12 +2243,7 @@ class Stage extends Entity implements ISystem {
                     endtarget,
                     lerp_amt
                 );
-                    
-
-                
-            } else {
-                //   log( this.player_objects["self"]["cannonbody"].velocity.y * this.player_objects["self"]["cannonbody"].velocity.y )
-            }
+            } 
         }
         
         
