@@ -967,7 +967,7 @@ class Stage extends Entity implements ISystem {
         //-------
         // CameraBox
         x = 8;
-        y = 4.5;
+        y = 6;
         z = 8;
         sx = sy = sz = 1;
         let camerabox = new Entity();
@@ -1720,6 +1720,8 @@ class Stage extends Entity implements ISystem {
             
             _this.colyseus_room = room;
             _this.time = 0;
+            _this.game_completed = 0;
+
             ui.displayAnnouncement("Joining Multiplayer Server.... \nServer Connected. \n\n Note: You may experience slight latency as physics simulation is done on server in multiplayers mode.", 10, Color4.Yellow(), 14, false);
             
             _this.ui_mode.value = "Mode: Multiplayers. "
@@ -1905,6 +1907,11 @@ class Stage extends Entity implements ISystem {
             //---------
             room.onMessage("restart", ( player_lives_on_server ) => {
                 ui.displayAnnouncement("[SERVER] Player Restarted.", 10, Color4.Blue(), 14, false);
+                _this.reset_cannonbody( _this.player_objects["self"].cannonbody );
+                _this.lives = 5;
+                _this.time = 0;
+                _this.game_completed = 0;
+                _this.reduce_life( 0 );
             });
 
             //---------
