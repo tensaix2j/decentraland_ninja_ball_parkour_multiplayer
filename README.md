@@ -6,7 +6,7 @@ This is an entry for DCL game jam 2022
 Ninja Ball Parkour is a game in Decentraland where players parkour as a ball in a Ninja Warrior style obstacle course.
 
 ## Features:
-1. 3D Physics Simulation using Cannon.js. Players can experience the gravity, speed, acceleration and inertia from the simulation by rolling the ball from high ground to low ground.
+1. 3D Physics Simulation using Cannon.js. Players can experience the gravity, speed, acceleration and inertia from the simulation by rolling the ball around passing through high grounds and low grounds.
 
 ![](https://github.com/tensaix2j/decentraland_ninja_ball_parkour_multiplayer/blob/master/images/screenshot_01.png?raw=true)
 
@@ -22,7 +22,7 @@ Ninja Ball Parkour is a game in Decentraland where players parkour as a ball in 
 
 ![](https://github.com/tensaix2j/decentraland_ninja_ball_parkour_multiplayer/blob/master/images/screenshot_04.png?raw=true)
 
-5. The obstacle course includes rotating platforms, swinging pendulums, tiny platforms and launch pads and etc.
+5. The obstacle course includes narrow slanted ramps, rotating platforms, swinging pendulums, tiny platforms and launch pads and etc.
 
 ![](https://github.com/tensaix2j/decentraland_ninja_ball_parkour_multiplayer/blob/master/images/screenshot_05.png?raw=true) 
 
