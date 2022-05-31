@@ -966,9 +966,9 @@ class Stage extends Entity implements ISystem {
 
         //-------
         // CameraBox
-        x = 8;
-        y = 6;
-        z = 8;
+        x = 6.16;
+        y = 4.35;
+        z = 6.34;
         sx = sy = sz = 1;
         let camerabox = new Entity();
         camerabox.setParent(this);
@@ -2253,8 +2253,7 @@ class Stage extends Entity implements ISystem {
             } 
         }
         
-        
-        
+               
 
     }
 }
