@@ -5,7 +5,9 @@ This is an entry for DCL game jam 2022
 
 Ninja Ball Parkour is a game in Decentraland where players parkour as a ball in a Ninja Warrior style obstacle course.
 
-Watch Demo Play Through [here](https://www.youtube.com/watch?v=mWXz0bpL_m8)
+Watch Demo PlayThrough [here](https://www.youtube.com/watch?v=mWXz0bpL_m8)
+
+Play Demo [here](http://tensaistudio.xyz:8000/)
 
 ## Features:
 1. 3D Physics Simulation using Cannon.js. Players can experience the gravity, speed, acceleration and inertia from the simulation by rolling the ball around passing through high grounds and low grounds.
