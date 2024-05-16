@@ -7,7 +7,6 @@ Ninja Ball Parkour is a game in Decentraland where players parkour as a ball in 
 
 Watch Demo PlayThrough Video [here](https://www.youtube.com/watch?v=mWXz0bpL_m8)
 
-Play Demo [here](http://tensaistudio.xyz:8000/)
 
 ## Features:
 1. 3D Physics Simulation using Cannon.js. Players can experience the gravity, speed, acceleration and inertia from the simulation by rolling the ball around passing through high grounds and low grounds.
